@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Poin Anak v2</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d6efd">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            padding-bottom: 50px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2, h3, h4 {
+            font-weight: 600;
+            color: #333;
+        }
+        .btn-custom {
+            border-radius: 10px;
+            padding: 10px 20px;
+        }
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+        }
+        .d-none-custom {
+            display: none !important;
+        }
+        /* Styling untuk Paginasi */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        /* Styling Spinner Gacha */
+        #canvasContainer {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+        .arrow-down {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 30px solid #dc3545; /* Merah */
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <div class="text-center mb-4">
+        <h1>✨ Poin Anak ✨</h1>
+        <p class="text-muted">Sistem Pencatatan, Riwayat & Gacha</p>
+    </div>
+
+    <ul class="nav nav-pills nav-fill mb-4 bg-white p-2 rounded shadow-sm" id="pills-tab" role="tablist">
+        <li class="nav-item"><button class="nav-link active" onclick="switchView('input')">📝 Input Data</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchView('history')">📂 Riwayat Detail</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchView('tukar')">🎁 Tukar Poin</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchView('info')">ℹ️ Aturan</button></li>
+    </ul>
+
+    <div id="view-input" class="view-section">
+        <div class="card p-4">
+            <h4>Input Poin Baru</h4>
+            <hr>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Pilih Mode Input:</label>
+                <select class="form-select" id="inputMode">
+                    <option value="pelanggaran">⚠️ Pelanggaran (Poin Minus)</option>
+                    <option value="aktifitas">✅ Aktifitas (Poin Plus)</option>
+                </select>
+            </div>
+
+            <form id="formInputData">
+                <div class="mb-3">
+                    <label class="form-label">Nama Anak:</label>
+                    <select class="form-select" id="inputNama" required></select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Jenis Aksi:</label>
+                    <select class="form-select" id="inputJenis" onchange="checkCustomInput()" required></select>
+                </div>
+
+                <div class="mb-3 d-none-custom" id="customInputArea">
+                    <div class="row">
+                        <div class="col-8">
+                            <input type="text" class="form-control" id="manualActionName" placeholder="Nama Aksi Manual">
+                        </div>
+                        <div class="col-4">
+                            <input type="number" class="form-control" id="manualActionPoint" placeholder="Poin">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 btn-custom">Simpan Data</button>
+            </form>
+        </div>
+
+        <div class="card p-4">
+            <h4>Riwayat Input Terkini (Semua)</h4>
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Tgl</th>
+                            <th>Nama</th>
+                            <th>Aksi</th>
+                            <th>Poin</th>
+                            <th>Hapus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-history" class="view-section d-none-custom">
+        <div class="card p-4">
+            <h4>📂 Filter Riwayat Anak</h4>
+            <div class="mb-3">
+                <label class="form-label">Lihat Data Siapa?</label>
+                <select class="form-select" id="historyNama" onchange="renderHistoryDetail(1)">
+                    <option value="">-- Pilih Nama Anak --</option>
+                </select>
+            </div>
+
+            <div id="historyResultArea" class="d-none-custom">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Tipe</th>
+                                <th>Keterangan</th>
+                                <th>Poin</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyDetailBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-info mt-3 d-flex justify-content-between align-items-center">
+                    <span><strong>Total Poin Bersih (Setelah Penukaran):</strong></span>
+                    <span class="h4 mb-0 fw-bold" id="historyTotalPoint">0</span>
+                </div>
+
+                <div class="pagination-container">
+                    <button class="btn btn-sm btn-secondary" id="btnPrev" onclick="changePage(-1)">Previous</button>
+                    <span id="pageIndicator">Halaman 1</span>
+                    <button class="btn btn-sm btn-secondary" id="btnNext" onclick="changePage(1)">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-tukar" class="view-section d-none-custom">
+        <div class="card p-4">
+            <h4>🎁 Penukaran Poin</h4>
+            <p class="small text-muted">Hanya poin > 500 yang muncul.</p>
+            <select class="form-select mb-3" id="tukarNama" onchange="loadStudentStats()">
+                <option value="">-- Pilih Anak --</option>
+            </select>
+
+            <div id="studentStats" class="d-none-custom">
+                <div class="alert alert-warning">
+                    <h5 class="mb-0">Sisa Poin: <strong id="displayTotalPoin">0</strong></h5>
+                </div>
+                <div class="row">
+                    <div class="col-6"><button class="btn btn-secondary w-100 btn-custom" onclick="checkPoints()">Cek</button></div>
+                    <div class="col-6"><button class="btn btn-success w-100 btn-custom" id="btnProceedTukar" disabled onclick="showRedeemOptions()">Tukar</button></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="spinnerTemplate" style="display:none;">
+            <div id="canvasContainer">
+                <div class="arrow-down"></div>
+                <canvas id="wheelCanvas" width="300" height="300"></canvas>
+            </div>
+        </div>
+
+        <div class="card p-4 mt-3">
+            <h4>📜 Log Penukaran</h4>
+             <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                    <thead><tr><th>Nama</th><th>Hadiah</th><th>Biaya</th><th>Batal</th></tr></thead>
+                    <tbody id="redeemHistoryTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-info" class="view-section d-none-custom">
+        <div class="card p-4">
+            <h4 class="text-danger">Daftar Pelanggaran</h4>
+            <table class="table table-sm mb-4"><tbody id="infoPelanggaran"></tbody></table>
+            <h4 class="text-success">Daftar Aktifitas</h4>
+            <table class="table table-sm"><tbody id="infoAktifitas"></tbody></table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+<script>
+    // === DATA UTAMA ===
+    const students = ["Nadifa", "Dira", "Ara", "Sabira", "Putri", "Wawa", "Yasmin", "Haidar", "Nabila", "Zidan"];
+    
+    const violations = [
+        { name: "Tidak masuk tanpa izin", point: -10 },
+        { name: "Berkata kasar", point: -50 },
+        { name: "Bercanda saat bukan waktunya", point: -100 },
+        { name: "Meninggikan suara thdp guru", point: -40 },
+        { name: "Tidak berakhlak/beradab", point: -50 },
+        { name: "Tidak disiplin saat mengaji", point: -20 },
+        { name: "Melawan tanpa alasan", point: -50 },
+        { name: "Melakukan sesuatu bkn waktunya", point: -20 },
+        { name: "Berisik / bercanda saat azan", point: -20 },
+        { name: "Berbohong (Reset Poin)", point: 0 }
+    ];
+
+    const activities = [
+        { name: "Salim setiap pulang ngaji", point: 5 },
+        { name: "Salam masuk mushola", point: 5 },
+        { name: "Menegur teman bercanda", point: 15 },
+        { name: "Menjawab pertanyaan", point: 10 },
+        { name: "Berani bertanya", point: 20 },
+        { name: "Piket", point: 5 },
+        { name: "Bilang permisi", point: 5 },
+        { name: "Salim orang tua di luar", point: 10 },
+        { name: "Sholat jamaah 4 waktu", point: 100 },
+        { name: "Hadir ngaji 1 minggu", point: 30 }
+    ];
+
+    // === DATABASE HELPER ===
+    function getLogs() { return JSON.parse(localStorage.getItem('ngaji_logs_v2')) || []; }
+    function saveLogs(logs) { localStorage.setItem('ngaji_logs_v2', JSON.stringify(logs)); }
+    
+    function getRedeems() { return JSON.parse(localStorage.getItem('ngaji_redeems_v2')) || []; }
+    function saveRedeems(list) { localStorage.setItem('ngaji_redeems_v2', JSON.stringify(list)); }
+
+    function getGachaCount(name) {
+        const counts = JSON.parse(localStorage.getItem('ngaji_gacha_count_v2')) || {};
+        return counts[name] || 0;
+    }
+    function incGachaCount(name) {
+        const counts = JSON.parse(localStorage.getItem('ngaji_gacha_count_v2')) || {};
+        counts[name] = (counts[name] || 0) + 1;
+        localStorage.setItem('ngaji_gacha_count_v2', JSON.stringify(counts));
+    }
+
+    // === LOGIC HITUNG POIN ===
+    function calculatePoints(name) {
+        const logs = getLogs();
+        const redeems = getRedeems();
+        let total = 0;
+
+        // Urutkan log berdasarkan waktu untuk logika reset
+        const userLogs = logs.filter(l => l.name === name).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+        userLogs.forEach(log => {
+            if (log.desc.includes("Berbohong")) total = 0;
+            else total += parseInt(log.point);
+        });
+
+        const userRedeems = redeems.filter(r => r.name === name);
+        userRedeems.forEach(r => total -= parseInt(r.cost));
+
+        return total;
+    }
+
+    // === UI STARTUP ===
+    document.addEventListener("DOMContentLoaded", () => {
+        renderSelectOptions();
+        renderInfoTables();
+        renderRecentLogs();
+        renderRedeemHistory();
+        document.getElementById('inputMode').addEventListener('change', renderSelectOptions);
+    });
+
+    function switchView(viewName) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none-custom'));
+        document.getElementById(`view-${viewName}`).classList.remove('d-none-custom');
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+
+        if(viewName === 'tukar') loadEligibleStudents();
+        if(viewName === 'history') renderSelectOptions(); // Refresh nama di history
+    }
+
+    // === INPUT & SELECT OPTION ===
+    function renderSelectOptions() {
+        const mode = document.getElementById('inputMode').value;
+        const nameSelect = document.getElementById('inputNama');
+        const typeSelect = document.getElementById('inputJenis');
+        const historySelect = document.getElementById('historyNama');
+
+        // Isi Pilihan Nama (Untuk Input & History)
+        const fillNames = (el) => {
+            el.innerHTML = '<option value="">-- Pilih Nama --</option>';
+            students.forEach(s => el.innerHTML += `<option value="${s}">${s}</option>`);
+        };
+        fillNames(nameSelect);
+        if(historySelect.options.length <= 1) fillNames(historySelect);
+
+        // Isi Pilihan Aksi
+        typeSelect.innerHTML = '<option value="" disabled selected>Pilih Aksi</option>';
+        const list = mode === 'pelanggaran' ? violations : activities;
+        list.forEach(item => {
+            typeSelect.innerHTML += `<option value="${item.point}|${item.name}">${item.name} (${item.point > 0 ? '+' : ''}${item.point})</option>`;
+        });
+        typeSelect.innerHTML += `<option value="custom">-- Lainnya (Input Sendiri) --</option>`;
+        document.getElementById('customInputArea').classList.add('d-none-custom');
+    }
+
+    function checkCustomInput() {
+        const val = document.getElementById('inputJenis').value;
+        document.getElementById('customInputArea').classList.toggle('d-none-custom', val !== 'custom');
+    }
+
+    // === SIMPAN DATA ===
+    document.getElementById('formInputData').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('inputNama').value;
+        const typeVal = document.getElementById('inputJenis').value;
+        let point, desc;
+
+        if (typeVal === 'custom') {
+            desc = document.getElementById('manualActionName').value;
+            point = parseInt(document.getElementById('manualActionPoint').value);
+            if(!desc || isNaN(point)) return Swal.fire('Error', 'Isi lengkap!', 'error');
+        } else {
+            const split = typeVal.split('|');
+            point = parseInt(split[0]);
+            desc = split[1];
+        }
+
+        const logs = getLogs();
+        logs.push({
+            id: Date.now(),
+            name: name,
+            type: document.getElementById('inputMode').value,
+            desc: desc,
+            point: point,
+            date: new Date().toLocaleString()
+        });
+        saveLogs(logs);
+        
+        renderRecentLogs();
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data tersimpan!', timer: 2000, showConfirmButton: false });
+        
+        // Reset
+        document.getElementById('inputNama').value = "";
+        document.getElementById('inputJenis').value = "";
+        document.getElementById('customInputArea').classList.add('d-none-custom');
+    });
+
+    // === TABEL LOG UTAMA & HAPUS ===
+    function renderRecentLogs() {
+        const logs = getLogs().reverse().slice(0, 10); 
+        const tbody = document.getElementById('logTableBody');
+        tbody.innerHTML = "";
+        logs.forEach(l => {
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-size:12px">${l.date.split(',')[0]}</td>
+                    <td>${l.name}</td>
+                    <td>${l.desc}</td>
+                    <td class="${l.point < 0 ? 'text-danger' : 'text-success'} fw-bold">${l.point}</td>
+                    <td class="text-center"><button class="btn btn-sm btn-danger" onclick="deleteLog(${l.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+        });
+    }
+
+    function deleteLog(id) {
+        Swal.fire({
+            title: 'Hapus Data?',
+            text: "Poin akan dikembalikan seperti semula.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Ya, Hapus!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let logs = getLogs();
+                logs = logs.filter(l => l.id !== id);
+                saveLogs(logs);
+                renderRecentLogs();
+                // Jika sedang di halaman detail, refresh juga
+                if(!document.getElementById('view-history').classList.contains('d-none-custom')){
+                    renderHistoryDetail(currentPage);
+                }
+                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+            }
+        });
+    }
+    
+    function deleteRedeem(id) {
+        Swal.fire({
+            title: 'Batalkan Penukaran?',
+            text: "Poin akan dikembalikan ke Anak.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Batalkan!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let list = getRedeems();
+                list = list.filter(r => r.id !== id);
+                saveRedeems(list);
+                renderRedeemHistory();
+                Swal.fire('Dibatalkan!', 'Penukaran dibatalkan, poin kembali.', 'success');
+            }
+        });
+    }
+
+    // === FITUR RIWAYAT DETAIL & PAGINASI ===
+    let currentPage = 1;
+    const rowsPerPage = 10;
+
+    function renderHistoryDetail(page) {
+        const name = document.getElementById('historyNama').value;
+        if (!name) return document.getElementById('historyResultArea').classList.add('d-none-custom');
+
+        document.getElementById('historyResultArea').classList.remove('d-none-custom');
+        currentPage = page;
+
+        // Ambil data & filter
+        const allLogs = getLogs().filter(l => l.name === name).sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        // Total Poin Kalkulasi Ulang
+        const totalPoin = calculatePoints(name);
+        document.getElementById('historyTotalPoint').innerText = totalPoin;
+
+        // Paginasi Logic
+        const totalPages = Math.ceil(allLogs.length / rowsPerPage);
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const paginatedItems = allLogs.slice(start, end);
+
+        // Render Tabel
+        const tbody = document.getElementById('historyDetailBody');
+        tbody.innerHTML = "";
+        if(paginatedItems.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada data.</td></tr>';
+        } else {
+            paginatedItems.forEach(l => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${l.date}</td>
+                        <td>${l.type === 'pelanggaran' ? '⚠️' : '✅'}</td>
+                        <td>${l.desc}</td>
+                        <td class="${l.point < 0 ? 'text-danger' : 'text-success'} fw-bold">${l.point}</td>
+                        <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="deleteLog(${l.id})"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Render Tombol Paginasi
+        document.getElementById('pageIndicator').innerText = `Halaman ${page} dari ${totalPages || 1}`;
+        document.getElementById('btnPrev').disabled = (page === 1);
+        document.getElementById('btnNext').disabled = (page >= totalPages || totalPages === 0);
+    }
+
+    function changePage(delta) {
+        renderHistoryDetail(currentPage + delta);
+    }
+
+
+    // === LOGIKA TUKAR POIN ===
+    function loadEligibleStudents() {
+        const select = document.getElementById('tukarNama');
+        select.innerHTML = '<option value="">-- Pilih Anak --</option>';
+        students.forEach(s => {
+            const t = calculatePoints(s);
+            if (t > 500) select.innerHTML += `<option value="${s}">${s} (Poin: ${t})</option>`;
+        });
+        document.getElementById('studentStats').classList.add('d-none-custom');
+    }
+
+    function loadStudentStats() {
+        const name = document.getElementById('tukarNama').value;
+        if (!name) return;
+        document.getElementById('studentStats').classList.remove('d-none-custom');
+        document.getElementById('displayTotalPoin').innerText = calculatePoints(name);
+        document.getElementById('btnProceedTukar').disabled = true;
+    }
+
+    function checkPoints() {
+        const name = document.getElementById('tukarNama').value;
+        const total = calculatePoints(name);
+        if (total > 500) {
+            Swal.fire('Valid', `Poin ${name}: ${total}. Silakan tukar.`, 'success');
+            document.getElementById('btnProceedTukar').disabled = false;
+        } else {
+            Swal.fire('Kurang', `Poin belum cukup (Min 500).`, 'error');
+        }
+    }
+
+    function showRedeemOptions() {
+        const name = document.getElementById('tukarNama').value;
+        Swal.fire({
+            title: 'Metode Penukaran',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Pasti (Sistem)',
+            cancelButtonText: 'Gacha (Spinner)',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d63384'
+        }).then((result) => {
+            if (result.isConfirmed) showFixedSystem(name);
+            else if (result.dismiss === Swal.DismissReason.cancel) showGachaSystem(name);
+        });
+    }
+
+    function showFixedSystem(name) {
+        // (Sama seperti sebelumnya, disingkat agar muat)
+        Swal.fire({
+            title: 'Pilih Nominal',
+            showDenyButton: true,
+            confirmButtonText: '2.000',
+            denyButtonText: '5.000',
+        }).then((res) => {
+            if (res.isConfirmed) showTiers(name, 2000);
+            else if (res.isDenied) showTiers(name, 5000);
+        });
+    }
+
+    function showTiers(name, type) {
+        const tiers = type === 2000 ? [500, 800, 1200, 1800, 2200] : [1500, 2400, 3500, 4800, 6000];
+        const cur = calculatePoints(name);
+        let html = `<div class="list-group">`;
+        tiers.forEach((cost, i) => {
+            const disabled = cur < cost ? 'disabled' : '';
+            const cls = cur >= cost ? 'list-group-item-success' : 'list-group-item-light text-muted';
+            html += `<button class="list-group-item list-group-item-action ${cls}" ${disabled} onclick="processRedeem('${name}', ${cost}, 'Uang ${type}', false)">Tahap ${i+1} : ${cost} Poin</button>`;
+        });
+        html += '</div>';
+        Swal.fire({ title: `Tukar ${type}`, html: html, showConfirmButton: false });
+    }
+
+    // === SISTEM GACHA DENGAN SPINNER CHART.JS ===
+    let wheelChart = null;
+
+    function getGachaCostCalc(count) {
+        if (count === 0) return 500;
+        let cost = 500;
+        for(let i=1; i<=count; i++) {
+            let r = i % 4;
+            if(r===1) cost+=200; else if(r===2) cost+=300; else if(r===3) cost+=400; else cost+=500;
+        }
+        return cost;
+    }
+
+    function showGachaSystem(name) {
+        const count = getGachaCount(name);
+        const cost = getGachaCostCalc(count);
+        const cur = calculatePoints(name);
+
+        Swal.fire({
+            title: '🎲 GACHA SPINNER',
+            html: `<p>Biaya: <b>${cost} Poin</b> | Poinmu: ${cur}</p><p class="text-danger small">Peringatan: Resiko tinggi zonk!</p>`,
+            showCancelButton: true,
+            confirmButtonText: `GAS (-${cost})`,
+            confirmButtonColor: '#d63384'
+        }).then((res) => {
+            if(res.isConfirmed) {
+                if (cur < cost) Swal.fire('Gagal', 'Poin kurang!', 'error');
+                else openSpinnerModal(name, cost);
+            }
+        });
+    }
+
+    function openSpinnerModal(name, cost) {
+        Swal.fire({
+            title: 'Semoga Beruntung!',
+            html: document.getElementById('spinnerTemplate').innerHTML,
+            showConfirmButton: false, // Jangan ada tombol dulu
+            allowOutsideClick: false,
+            didOpen: () => {
+                initWheel(name, cost);
+            }
+        });
+    }
+
+    function initWheel(name, cost) {
+        const ctx = document.querySelector('.swal2-popup #wheelCanvas').getContext('2d');
+        
+        // Visual Slices (Hanya visual, logic tetap matematika)
+        // Kita buat slice biar kelihatan ramai
+        const labels = ["500", "ZONK", "1.000", "Mainan", "2.000", "ZONK", "5.000", "Mainan", "10k", "ZONK"];
+        const colors = ["#FFD700", "#808080", "#ADFF2F", "#FFA500", "#00FFFF", "#808080", "#FF00FF", "#FFA500", "#FF4500", "#808080"];
+
+        wheelChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Ukuran slice sama
+                    backgroundColor: colors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                animation: { duration: 0 }
+            }
+        });
+
+        spinWheelLogic(name, cost);
+    }
+
+    function spinWheelLogic(name, cost) {
+        // 1. Tentukan Pemenang dulu pake Math.random
+        const rand = Math.random() * 100;
+        let reward = "Uang Mainan (ZONK)";
+        let stopIndex = 3; // Index default visual (Mainan)
+
+        if (rand < 0.001) { reward = "Uang 10.000"; stopIndex = 8; } // Index 8 di array labels
+        else if (rand < 0.501) { reward = "Uang 5.000"; stopIndex = 6; }
+        else if (rand < 2.501) { reward = "Uang 2.000"; stopIndex = 4; }
+        else if (rand < 22.501) { reward = "Uang 1.000"; stopIndex = 2; }
+        else if (rand < 62.501) { reward = "Uang 500"; stopIndex = 0; }
+        else { 
+            // ZONK / MAINAN (Random visual index yg isinya zonk)
+            const zonks = [1, 3, 5, 7, 9];
+            stopIndex = zonks[Math.floor(Math.random() * zonks.length)];
+        }
+
+        // 2. Animasi Putar
+        let currentRotation = 0;
+        // Putar minimal 5 kali (360 * 5) + derajat menuju target
+        // Chart JS Pie mulai dari jam 3 (0 derajat) ke kanan.
+        // Kita harus hitung derajat target. Ada 10 slice, 1 slice = 36 deg.
+        // Agar panah atas menunjuk target, target harus di posisi jam 12 (270 deg atau -90 deg).
+        
+        const sliceAngle = 36; 
+        // Logic animasi kasar:
+        let spins = 50; // jumlah frame animasi cepat
+        let speed = 20; 
+        let count = 0;
+        
+        const anim = setInterval(() => {
+            wheelChart.options.rotation += speed;
+            wheelChart.update();
+            count++;
+            
+            if (count > 100) { // Mulai melambat
+                speed *= 0.98; 
+            }
+
+            if (speed < 0.5) {
+                clearInterval(anim);
+                // Final Result
+                setTimeout(() => {
+                    Swal.fire({
+                        title: reward.includes("ZONK") || reward.includes("Mainan") ? 'YAHHH...' : 'SELAMAT!',
+                        text: `Kamu dapat ${reward}`,
+                        icon: reward.includes("ZONK") ? 'error' : 'success'
+                    }).then(() => {
+                         processRedeem(name, cost, reward, true);
+                    });
+                }, 500);
+            }
+        }, 16);
+    }
+
+    function processRedeem(name, cost, reward, isGacha) {
+        const data = { id: Date.now(), name, cost, reward, date: new Date().toLocaleString() };
+        let redeems = getRedeems();
+        redeems.push(data);
+        saveRedeems(redeems);
+
+        if(isGacha) incGachaCount(name);
+        
+        if(!isGacha) { // Jika bukan gacha, alert manual, kalo gacha udah alert di spinner
+            let icon = (reward.includes('Mainan') || reward.includes('ZONK')) ? 'error' : 'success';
+            Swal.fire('Berhasil', `Dapat ${reward}`, icon);
+        }
+        
+        loadEligibleStudents();
+        renderRedeemHistory();
+        // Refresh total di history jika terbuka
+        if(!document.getElementById('view-history').classList.contains('d-none-custom')){
+             renderHistoryDetail(currentPage);
+        }
+    }
+
+    function renderRedeemHistory() {
+        const list = getRedeems().reverse();
+        const tbody = document.getElementById('redeemHistoryTable');
+        tbody.innerHTML = "";
+        list.forEach(r => {
+            tbody.innerHTML += `<tr>
+                <td>${r.name}</td>
+                <td class="fw-bold text-primary">${r.reward}</td>
+                <td class="text-danger">-${r.cost}</td>
+                <td><button class="btn btn-sm text-danger" onclick="deleteRedeem(${r.id})">❌</button></td>
+            </tr>`;
+        });
+    }
+    
+    function renderInfoTables() {
+        const tPel = document.getElementById('infoPelanggaran');
+        const tAkt = document.getElementById('infoAktifitas');
+        violations.forEach(v => tPel.innerHTML += `<tr><td>${v.name}</td><td class="text-danger">${v.point}</td></tr>`);
+        activities.forEach(a => tAkt.innerHTML += `<tr><td>${a.name}</td><td class="text-success">+${a.point}</td></tr>`);
+    }
+
+</script>
+
+<script>
+    // PWA Service Worker Register
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW sukses: ', reg.scope))
+          .catch(err => console.log('SW gagal: ', err));
+      });
+    }
+</script>
+
+</body>
+</html>
