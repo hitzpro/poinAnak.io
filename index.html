@@ -2,152 +2,186 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Poin Anak v2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Poin Anak Mobile</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d6efd">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0d6efd">
-    <link rel="apple-touch-icon" href="icon.png">
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
     
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f0f2f5;
-            padding-bottom: 80px; /* Tambah padding bawah biar konten gak ketutup tombol HP */
+            /* Padding bawah besar agar konten tidak tertutup Bottom Nav */
+            padding-bottom: 90px; 
         }
         .card {
             border: none;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             margin-bottom: 20px;
-            overflow: hidden; /* Card yang hidden, bukan tabelnya */
+            overflow: hidden;
         }
-        h1, h2, h3, h4 {
-            font-weight: 600;
-            color: #333;
-        }
-        .btn-custom {
-            border-radius: 10px;
-            padding: 10px 20px;
-        }
-        
-        /* --- PERBAIKAN TABLE RESPONSIVE --- */
+        h1, h2, h3, h4 { font-weight: 600; color: #333; }
+        .btn-custom { border-radius: 10px; padding: 10px 20px; }
+        .d-none-custom { display: none !important; }
+
+        /* --- TABLE RESPONSIVE FIX --- */
         .table-responsive {
             display: block;
             width: 100%;
-            overflow-x: auto; /* Wajib auto biar bisa scroll */
-            -webkit-overflow-scrolling: touch; /* Biar smooth di iPhone */
-            border-radius: 0; /* Reset radius di wrapper tabel */
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
-
-        /* Trik biar tabel maksa scroll ke samping di HP */
         .table th, .table td {
-            white-space: nowrap; /* Teks gak bakal turun baris */
+            white-space: nowrap;
             vertical-align: middle;
         }
-        
-        /* Sedikit styling biar tabel gak nempel banget */
-        .table {
-            margin-bottom: 0;
-        }
-        /* ---------------------------------- */
 
-        .d-none-custom {
-            display: none !important;
-        }
+        /* --- NAVIGASI DESKTOP (Top) --- */
+        .desktop-nav { display: flex; }
         
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
+        /* --- NAVIGASI MOBILE (Bottom) --- */
+        .mobile-bottom-nav {
+            display: none; /* Default hidden di desktop */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            height: 70px;
+            z-index: 1000;
+            justify-content: space-around;
             align-items: center;
-            margin-top: 15px;
+            padding-bottom: env(safe-area-inset-bottom); /* Untuk iPhone X ke atas */
+        }
+        
+        .nav-item-mob {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 10px;
+            width: 25%;
+            height: 100%;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .nav-item-mob i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item-mob.active {
+            color: #0d6efd; /* Biru Bootstrap */
+            font-weight: 600;
         }
 
-        /* Styling Spinner Gacha */
-        #canvasContainer {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            margin: 0 auto;
+        /* MEDIA QUERY UNTUK HP */
+        @media (max-width: 768px) {
+            .desktop-nav { display: none !important; }
+            .mobile-bottom-nav { display: flex !important; }
+            .container { padding-top: 10px; }
+            h1 { font-size: 1.5rem; }
         }
+
+        /* Styles Pagination & Spinner */
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        #canvasContainer { position: relative; width: 300px; height: 300px; margin: 0 auto; }
         .arrow-down {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0; 
-            height: 0; 
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 30px solid #dc3545;
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; 
+            border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 30px solid #dc3545;
             z-index: 10;
+        }
+
+        /* --- FIX CSS KHUSUS TABEL INFO/ATURAN --- */
+        /* Kita targetkan tabel yang ada di dalam id="view-info" */
+        #view-info .table {
+            display: block;       /* Ubah sifat tabel jadi blok biar bisa di-set overflow */
+            width: 100%;          /* Lebar penuh */
+            overflow-x: auto;     /* Munculin scrollbar kalau konten kepanjangan */
+            white-space: nowrap;  /* Paksa teks jangan turun baris (wrap), tapi lurus ke samping */
+            -webkit-overflow-scrolling: touch; /* Biar scroll di HP licin */
+        }
+
+        /* Opsional: Biar kolom poin gak terlalu mepet kanan */
+        #view-info .table td:last-child {
+            padding-right: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<div class="container mt-4">
+<div class="container mt-3">
     <div class="text-center mb-4">
-        <h1>✨ Poin Anak ✨</h1>
-        <p class="text-muted">Sistem Pencatatan, Riwayat & Gacha</p>
+        <h4>✨ Sistem Poin Anak ✨</h4>
     </div>
 
-    <ul class="nav nav-pills nav-fill mb-4 bg-white p-2 rounded shadow-sm" id="pills-tab" role="tablist">
-        <li class="nav-item"><button class="nav-link active" onclick="switchView('input')">📝 Input Data</button></li>
-        <li class="nav-item"><button class="nav-link" onclick="switchView('history')">📂 Riwayat Detail</button></li>
-        <li class="nav-item"><button class="nav-link" onclick="switchView('tukar')">🎁 Tukar Poin</button></li>
-        <li class="nav-item"><button class="nav-link" onclick="switchView('info')">ℹ️ Aturan</button></li>
+    <ul class="nav nav-pills nav-fill mb-4 bg-white p-2 rounded shadow-sm desktop-nav">
+        <li class="nav-item"><button class="nav-link active" onclick="switchView('input')">Input Data</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchView('history')">Riwayat Detail</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchView('tukar')">Tukar Poin</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchView('info')">Aturan</button></li>
     </ul>
 
     <div id="view-input" class="view-section">
         <div class="card p-4">
-            <h4>Input Poin Baru</h4>
+            <h5>📝 Input Poin</h5>
             <hr>
             <div class="mb-3">
-                <label class="form-label fw-bold">Pilih Mode Input:</label>
+                <label class="form-label fw-bold small">Mode Input:</label>
                 <select class="form-select" id="inputMode">
-                    <option value="pelanggaran">⚠️ Pelanggaran (Poin Minus)</option>
-                    <option value="aktifitas">✅ Aktifitas (Poin Plus)</option>
+                    <option value="pelanggaran">⚠️ Pelanggaran (Pengurangan)</option>
+                    <option value="aktifitas">✅ Aktifitas (Penambahan)</option>
                 </select>
             </div>
 
             <form id="formInputData">
                 <div class="mb-3">
-                    <label class="form-label">Nama Anak:</label>
+                    <label class="form-label small">Nama Anak:</label>
                     <select class="form-select" id="inputNama" required></select>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Jenis Aksi:</label>
+                    <label class="form-label small">Jenis Aksi:</label>
                     <select class="form-select" id="inputJenis" onchange="checkCustomInput()" required></select>
                 </div>
 
                 <div class="mb-3 d-none-custom" id="customInputArea">
-                    <div class="row">
+                    <div class="row g-2">
                         <div class="col-8">
                             <input type="text" class="form-control" id="manualActionName" placeholder="Nama Aksi Manual">
                         </div>
                         <div class="col-4">
-                            <input type="number" class="form-control" id="manualActionPoint" placeholder="Poin">
+                            <input type="number" class="form-control" id="manualActionPoint" placeholder="Poin (Positif aja)">
                         </div>
                     </div>
+                    <small class="text-muted" id="manualHintText">*Masukkan angka biasa, sistem akan otomatis menjadikannya minus.</small>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 btn-custom">Simpan Data</button>
+                <button type="submit" class="btn btn-primary w-100 btn-custom shadow-sm">Simpan Data</button>
             </form>
         </div>
 
-        <div class="card p-4">
-            <h4>Riwayat Input Terkini (Semua)</h4>
+        <div class="card p-3">
+            <h6>Riwayat Input Terkini</h6>
             <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0">
+                <table class="table table-sm table-striped mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th>Tgl</th>
                             <th>Nama</th>
                             <th>Aksi</th>
                             <th>Poin</th>
@@ -161,39 +195,37 @@
     </div>
 
     <div id="view-history" class="view-section d-none-custom">
-        <div class="card p-4">
-            <h4>📂 Filter Riwayat Anak</h4>
+        <div class="card p-3">
+            <h5>📂 Filter Per Anak</h5>
             <div class="mb-3">
-                <label class="form-label">Lihat Data Siapa?</label>
                 <select class="form-select" id="historyNama" onchange="renderHistoryDetail(1)">
                     <option value="">-- Pilih Nama Anak --</option>
                 </select>
             </div>
 
             <div id="historyResultArea" class="d-none-custom">
+                <div class="alert alert-primary text-center mb-3">
+                    <small>Total Poin Bersih</small><br>
+                    <h2 class="fw-bold mb-0" id="historyTotalPoint">0</h2>
+                </div>
+
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-primary">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
                             <tr>
-                                <th>Tanggal</th>
-                                <th>Tipe</th>
-                                <th>Keterangan</th>
+                                <th>Tgl</th>
+                                <th>Ket</th>
                                 <th>Poin</th>
-                                <th class="text-center">Aksi</th>
+                                <th class="text-center">Del</th>
                             </tr>
                         </thead>
                         <tbody id="historyDetailBody"></tbody>
                     </table>
                 </div>
 
-                <div class="alert alert-info mt-3 d-flex justify-content-between align-items-center">
-                    <span><strong>Total Poin Bersih (Setelah Penukaran):</strong></span>
-                    <span class="h4 mb-0 fw-bold" id="historyTotalPoint">0</span>
-                </div>
-
                 <div class="pagination-container">
-                    <button class="btn btn-sm btn-secondary" id="btnPrev" onclick="changePage(-1)">Previous</button>
-                    <span id="pageIndicator">Halaman 1</span>
+                    <button class="btn btn-sm btn-secondary" id="btnPrev" onclick="changePage(-1)">Prev</button>
+                    <span id="pageIndicator" class="small">Hal 1</span>
                     <button class="btn btn-sm btn-secondary" id="btnNext" onclick="changePage(1)">Next</button>
                 </div>
             </div>
@@ -201,19 +233,18 @@
     </div>
 
     <div id="view-tukar" class="view-section d-none-custom">
-        <div class="card p-4">
-            <h4>🎁 Penukaran Poin</h4>
-            <p class="small text-muted">Hanya poin > 500 yang muncul.</p>
+        <div class="card p-3">
+            <h5>🎁 Tukar Poin (>500)</h5>
             <select class="form-select mb-3" id="tukarNama" onchange="loadStudentStats()">
                 <option value="">-- Pilih Anak --</option>
             </select>
 
             <div id="studentStats" class="d-none-custom">
-                <div class="alert alert-warning">
-                    <h5 class="mb-0">Sisa Poin: <strong id="displayTotalPoin">0</strong></h5>
+                <div class="alert alert-warning py-2">
+                    <span class="small">Sisa Poin:</span> <strong id="displayTotalPoin">0</strong>
                 </div>
-                <div class="row">
-                    <div class="col-6"><button class="btn btn-secondary w-100 btn-custom" onclick="checkPoints()">Cek</button></div>
+                <div class="row g-2">
+                    <div class="col-6"><button class="btn btn-outline-secondary w-100 btn-custom" onclick="checkPoints()">Cek</button></div>
                     <div class="col-6"><button class="btn btn-success w-100 btn-custom" id="btnProceedTukar" disabled onclick="showRedeemOptions()">Tukar</button></div>
                 </div>
             </div>
@@ -226,8 +257,8 @@
             </div>
         </div>
 
-        <div class="card p-4 mt-3">
-            <h4>📜 Log Penukaran</h4>
+        <div class="card p-3 mt-3">
+            <h6>📜 Log Penukaran</h6>
              <div class="table-responsive">
                 <table class="table table-sm table-striped mb-0">
                     <thead><tr><th>Nama</th><th>Hadiah</th><th>Biaya</th><th>Batal</th></tr></thead>
@@ -238,14 +269,34 @@
     </div>
 
     <div id="view-info" class="view-section d-none-custom">
-        <div class="card p-4">
-            <h4 class="text-danger">Daftar Pelanggaran</h4>
+        <div class="card p-3">
+            <h6 class="text-danger border-bottom pb-2">⚠️ Pelanggaran (Minus)</h6>
             <table class="table table-sm mb-4"><tbody id="infoPelanggaran"></tbody></table>
-            <h4 class="text-success">Daftar Aktifitas</h4>
+            
+            <h6 class="text-success border-bottom pb-2">✅ Aktifitas (Plus)</h6>
             <table class="table table-sm"><tbody id="infoAktifitas"></tbody></table>
         </div>
     </div>
 
+</div>
+
+<div class="mobile-bottom-nav">
+    <button class="nav-item-mob active" id="mob-nav-input" onclick="switchView('input')">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span>Input</span>
+    </button>
+    <button class="nav-item-mob" id="mob-nav-history" onclick="switchView('history')">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Riwayat</span>
+    </button>
+    <button class="nav-item-mob" id="mob-nav-tukar" onclick="switchView('tukar')">
+        <i class="fa-solid fa-gift"></i>
+        <span>Tukar</span>
+    </button>
+    <button class="nav-item-mob" id="mob-nav-info" onclick="switchView('info')">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Aturan</span>
+    </button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -254,14 +305,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
 <script>
-    // === DATA UTAMA ===
+    // === DATA CONFIG ===
     const students = ["Nadifa", "Dira", "Ara", "Sabira", "Putri", "Wawa", "Yasmin", "Haidar", "Nabila", "Zidan"];
     
+    // Poin pelanggaran sudah negatif di config
     const violations = [
         { name: "Tidak masuk tanpa izin", point: -10 },
         { name: "Berkata kasar", point: -50 },
         { name: "Bercanda saat bukan waktunya", point: -100 },
-        { name: "Meninggikan suara thdp guru", point: -40 },
+        { name: "Meninggikan suara terhadap guru", point: -40 },
         { name: "Tidak berakhlak/beradab", point: -50 },
         { name: "Tidak disiplin saat mengaji", point: -20 },
         { name: "Melawan tanpa alasan", point: -50 },
@@ -283,70 +335,91 @@
         { name: "Hadir ngaji 1 minggu", point: 30 }
     ];
 
-    // === DATABASE HELPER ===
-    function getLogs() { return JSON.parse(localStorage.getItem('ngaji_logs_v2')) || []; }
-    function saveLogs(logs) { localStorage.setItem('ngaji_logs_v2', JSON.stringify(logs)); }
-    
-    function getRedeems() { return JSON.parse(localStorage.getItem('ngaji_redeems_v2')) || []; }
-    function saveRedeems(list) { localStorage.setItem('ngaji_redeems_v2', JSON.stringify(list)); }
-
+    // === DATABASE ===
+    function getLogs() { return JSON.parse(localStorage.getItem('ngaji_logs_v3')) || []; }
+    function saveLogs(logs) { localStorage.setItem('ngaji_logs_v3', JSON.stringify(logs)); }
+    function getRedeems() { return JSON.parse(localStorage.getItem('ngaji_redeems_v3')) || []; }
+    function saveRedeems(list) { localStorage.setItem('ngaji_redeems_v3', JSON.stringify(list)); }
     function getGachaCount(name) {
-        const counts = JSON.parse(localStorage.getItem('ngaji_gacha_count_v2')) || {};
+        const counts = JSON.parse(localStorage.getItem('ngaji_gacha_count_v3')) || {};
         return counts[name] || 0;
     }
     function incGachaCount(name) {
-        const counts = JSON.parse(localStorage.getItem('ngaji_gacha_count_v2')) || {};
+        const counts = JSON.parse(localStorage.getItem('ngaji_gacha_count_v3')) || {};
         counts[name] = (counts[name] || 0) + 1;
-        localStorage.setItem('ngaji_gacha_count_v2', JSON.stringify(counts));
+        localStorage.setItem('ngaji_gacha_count_v3', JSON.stringify(counts));
     }
 
-    // === LOGIC HITUNG POIN ===
+    // === CORE LOGIC: CALCULATE ===
     function calculatePoints(name) {
         const logs = getLogs();
         const redeems = getRedeems();
         let total = 0;
 
-        // Urutkan log berdasarkan waktu untuk logika reset
-        const userLogs = logs.filter(l => l.name === name).sort((a,b) => new Date(a.date) - new Date(b.date));
+        // 1. Hitung Log (Urutkan dari terlama ke terbaru untuk logic RESET)
+        const userLogs = logs.filter(l => l.name === name).sort((a,b) => a.id - b.id);
 
         userLogs.forEach(log => {
-            if (log.desc.includes("Berbohong")) total = 0;
-            else total += parseInt(log.point);
+            if (log.desc.includes("Berbohong")) {
+                total = 0; // Reset poin jadi 0
+            } else {
+                total += parseInt(log.point); // Tambahkan poin (minus otomatis berkurang)
+            }
         });
 
+        // 2. Kurangi Penukaran
         const userRedeems = redeems.filter(r => r.name === name);
         userRedeems.forEach(r => total -= parseInt(r.cost));
 
         return total;
     }
 
-    // === UI STARTUP ===
+    // === UI & NAVIGATION ===
     document.addEventListener("DOMContentLoaded", () => {
         renderSelectOptions();
         renderInfoTables();
         renderRecentLogs();
         renderRedeemHistory();
         document.getElementById('inputMode').addEventListener('change', renderSelectOptions);
+        
+        // Service Worker Register (PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(console.error);
+        }
     });
 
     function switchView(viewName) {
+        // Hide all sections
         document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none-custom'));
+        // Show selected
         document.getElementById(`view-${viewName}`).classList.remove('d-none-custom');
-        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-        event.target.classList.add('active');
+        
+        // Update Top Nav (Desktop)
+        document.querySelectorAll('.desktop-nav .nav-link').forEach(el => el.classList.remove('active'));
+        const topBtn = document.querySelector(`.desktop-nav button[onclick="switchView('${viewName}')"]`);
+        if(topBtn) topBtn.classList.add('active');
+
+        // Update Bottom Nav (Mobile)
+        document.querySelectorAll('.nav-item-mob').forEach(el => el.classList.remove('active'));
+        const botBtn = document.getElementById(`mob-nav-${viewName}`);
+        if(botBtn) botBtn.classList.add('active');
 
         if(viewName === 'tukar') loadEligibleStudents();
-        if(viewName === 'history') renderSelectOptions(); // Refresh nama di history
+        if(viewName === 'history') renderSelectOptions(); 
     }
 
-    // === INPUT & SELECT OPTION ===
+    // === INPUT LOGIC ===
     function renderSelectOptions() {
         const mode = document.getElementById('inputMode').value;
         const nameSelect = document.getElementById('inputNama');
         const typeSelect = document.getElementById('inputJenis');
         const historySelect = document.getElementById('historyNama');
+        const hintText = document.getElementById('manualHintText');
 
-        // Isi Pilihan Nama (Untuk Input & History)
+        // Set Hint Text
+        if(mode === 'pelanggaran') hintText.innerText = "*Masukkan angka positif (cth: 200), sistem otomatis menjadikannya MINUS (-200).";
+        else hintText.innerText = "*Masukkan angka positif, sistem menjadikannya PLUS.";
+
         const fillNames = (el) => {
             el.innerHTML = '<option value="">-- Pilih Nama --</option>';
             students.forEach(s => el.innerHTML += `<option value="${s}">${s}</option>`);
@@ -354,14 +427,14 @@
         fillNames(nameSelect);
         if(historySelect.options.length <= 1) fillNames(historySelect);
 
-        // Isi Pilihan Aksi
         typeSelect.innerHTML = '<option value="" disabled selected>Pilih Aksi</option>';
         const list = mode === 'pelanggaran' ? violations : activities;
         list.forEach(item => {
             typeSelect.innerHTML += `<option value="${item.point}|${item.name}">${item.name} (${item.point > 0 ? '+' : ''}${item.point})</option>`;
         });
-        typeSelect.innerHTML += `<option value="custom">-- Lainnya (Input Sendiri) --</option>`;
-        document.getElementById('customInputArea').classList.add('d-none-custom');
+        typeSelect.innerHTML += `<option value="custom">-- Lainnya (Input Manual) --</option>`;
+        
+        checkCustomInput();
     }
 
     function checkCustomInput() {
@@ -369,18 +442,29 @@
         document.getElementById('customInputArea').classList.toggle('d-none-custom', val !== 'custom');
     }
 
-    // === SIMPAN DATA ===
+    // === SUBMIT & FORCE NEGATIVE LOGIC ===
     document.getElementById('formInputData').addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('inputNama').value;
+        const mode = document.getElementById('inputMode').value;
         const typeVal = document.getElementById('inputJenis').value;
+        
         let point, desc;
 
+        // 1. AMBIL NILAI
         if (typeVal === 'custom') {
             desc = document.getElementById('manualActionName').value;
-            point = parseInt(document.getElementById('manualActionPoint').value);
-            if(!desc || isNaN(point)) return Swal.fire('Error', 'Isi lengkap!', 'error');
+            let rawPoint = parseInt(document.getElementById('manualActionPoint').value);
+            if(!desc || isNaN(rawPoint)) return Swal.fire('Eror', 'Isi nama aksi dan poin!', 'error');
+            
+            // 2. LOGIKA FIX: Paksa Tanda Minus/Plus Sesuai Mode
+            if (mode === 'pelanggaran') {
+                point = -Math.abs(rawPoint); // Pastikan negatif
+            } else {
+                point = Math.abs(rawPoint); // Pastikan positif
+            }
         } else {
+            // Ambil dari select option (nilai sudah benar dari array config)
             const split = typeVal.split('|');
             point = parseInt(split[0]);
             desc = split[1];
@@ -390,7 +474,7 @@
         logs.push({
             id: Date.now(),
             name: name,
-            type: document.getElementById('inputMode').value,
+            type: mode,
             desc: desc,
             point: point,
             date: new Date().toLocaleString()
@@ -398,73 +482,49 @@
         saveLogs(logs);
         
         renderRecentLogs();
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data tersimpan!', timer: 2000, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: `Berhasil simpan!`, text: `${desc}: ${point}`, timer: 1500, showConfirmButton: false });
         
-        // Reset
+        // Reset Form
         document.getElementById('inputNama').value = "";
         document.getElementById('inputJenis').value = "";
+        document.getElementById('manualActionName').value = "";
+        document.getElementById('manualActionPoint').value = "";
         document.getElementById('customInputArea').classList.add('d-none-custom');
     });
 
-    // === TABEL LOG UTAMA & HAPUS ===
+    // === RENDER TABLES ===
     function renderRecentLogs() {
         const logs = getLogs().reverse().slice(0, 10); 
         const tbody = document.getElementById('logTableBody');
         tbody.innerHTML = "";
         logs.forEach(l => {
+            const color = l.point < 0 ? 'text-danger' : 'text-success';
             tbody.innerHTML += `
                 <tr>
-                    <td style="font-size:12px">${l.date.split(',')[0]}</td>
-                    <td>${l.name}</td>
-                    <td>${l.desc}</td>
-                    <td class="${l.point < 0 ? 'text-danger' : 'text-success'} fw-bold">${l.point}</td>
-                    <td class="text-center"><button class="btn btn-sm btn-danger" onclick="deleteLog(${l.id})"><i class="fas fa-trash"></i></button></td>
+                    <td><div class="fw-bold">${l.name}</div><small class="text-muted" style="font-size:10px">${l.date.split(',')[0]}</small></td>
+                    <td style="font-size:12px; line-height:1.2">${l.desc}</td>
+                    <td class="${color} fw-bold">${l.point}</td>
+                    <td><button class="btn btn-sm text-danger" onclick="deleteLog(${l.id})"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>`;
         });
     }
 
     function deleteLog(id) {
         Swal.fire({
-            title: 'Hapus Data?',
-            text: "Poin akan dikembalikan seperti semula.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Ya, Hapus!'
+            title: 'Hapus?', text: "Poin akan kembali seperti semula.", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya'
         }).then((result) => {
             if (result.isConfirmed) {
-                let logs = getLogs();
-                logs = logs.filter(l => l.id !== id);
+                let logs = getLogs().filter(l => l.id !== id);
                 saveLogs(logs);
                 renderRecentLogs();
-                // Jika sedang di halaman detail, refresh juga
-                if(!document.getElementById('view-history').classList.contains('d-none-custom')){
-                    renderHistoryDetail(currentPage);
-                }
-                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-            }
-        });
-    }
-    
-    function deleteRedeem(id) {
-        Swal.fire({
-            title: 'Batalkan Penukaran?',
-            text: "Poin akan dikembalikan ke Anak.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Batalkan!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                let list = getRedeems();
-                list = list.filter(r => r.id !== id);
-                saveRedeems(list);
-                renderRedeemHistory();
-                Swal.fire('Dibatalkan!', 'Penukaran dibatalkan, poin kembali.', 'success');
+                if(!document.getElementById('view-history').classList.contains('d-none-custom')) renderHistoryDetail(currentPage);
+                Swal.fire('Dihapus', '', 'success');
             }
         });
     }
 
-    // === FITUR RIWAYAT DETAIL & PAGINASI ===
+    // === HISTORY DETAIL ===
     let currentPage = 1;
     const rowsPerPage = 10;
 
@@ -475,56 +535,41 @@
         document.getElementById('historyResultArea').classList.remove('d-none-custom');
         currentPage = page;
 
-        // Ambil data & filter
-        const allLogs = getLogs().filter(l => l.name === name).sort((a,b) => new Date(b.date) - new Date(a.date));
-        
-        // Total Poin Kalkulasi Ulang
-        const totalPoin = calculatePoints(name);
-        document.getElementById('historyTotalPoint').innerText = totalPoin;
+        const allLogs = getLogs().filter(l => l.name === name).sort((a,b) => b.id - a.id);
+        document.getElementById('historyTotalPoint').innerText = calculatePoints(name);
 
-        // Paginasi Logic
         const totalPages = Math.ceil(allLogs.length / rowsPerPage);
         const start = (page - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        const paginatedItems = allLogs.slice(start, end);
+        const paginated = allLogs.slice(start, start + rowsPerPage);
 
-        // Render Tabel
         const tbody = document.getElementById('historyDetailBody');
         tbody.innerHTML = "";
-        if(paginatedItems.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada data.</td></tr>';
-        } else {
-            paginatedItems.forEach(l => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${l.date}</td>
-                        <td>${l.type === 'pelanggaran' ? '⚠️' : '✅'}</td>
-                        <td>${l.desc}</td>
-                        <td class="${l.point < 0 ? 'text-danger' : 'text-success'} fw-bold">${l.point}</td>
-                        <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="deleteLog(${l.id})"><i class="fas fa-trash"></i></button></td>
-                    </tr>
-                `;
-            });
-        }
+        if(paginated.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-center">Kosong</td></tr>';
+        
+        paginated.forEach(l => {
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-size:11px">${l.date.split(',')[0]}</td>
+                    <td style="font-size:12px">${l.desc}</td>
+                    <td class="${l.point < 0 ? 'text-danger' : 'text-success'} fw-bold">${l.point}</td>
+                    <td class="text-center"><button class="btn btn-sm text-danger p-0" onclick="deleteLog(${l.id})"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
+        });
 
-        // Render Tombol Paginasi
-        document.getElementById('pageIndicator').innerText = `Halaman ${page} dari ${totalPages || 1}`;
+        document.getElementById('pageIndicator').innerText = `Hal ${page}/${totalPages||1}`;
         document.getElementById('btnPrev').disabled = (page === 1);
         document.getElementById('btnNext').disabled = (page >= totalPages || totalPages === 0);
     }
+    
+    function changePage(d) { renderHistoryDetail(currentPage + d); }
 
-    function changePage(delta) {
-        renderHistoryDetail(currentPage + delta);
-    }
-
-
-    // === LOGIKA TUKAR POIN ===
+    // === TUKAR POIN & GACHA (Sama seperti sebelumnya, disesuaikan variabel) ===
     function loadEligibleStudents() {
         const select = document.getElementById('tukarNama');
         select.innerHTML = '<option value="">-- Pilih Anak --</option>';
         students.forEach(s => {
             const t = calculatePoints(s);
-            if (t > 500) select.innerHTML += `<option value="${s}">${s} (Poin: ${t})</option>`;
+            if (t > 500) select.innerHTML += `<option value="${s}">${s} (${t})</option>`;
         });
         document.getElementById('studentStats').classList.add('d-none-custom');
     }
@@ -540,83 +585,67 @@
     function checkPoints() {
         const name = document.getElementById('tukarNama').value;
         const total = calculatePoints(name);
-        if (total > 500) {
-            Swal.fire('Valid', `Poin ${name}: ${total}. Silakan tukar.`, 'success');
+        if(total > 500) {
+            Swal.fire('Bisa!', `Poin ${name} valid: ${total}`, 'success');
             document.getElementById('btnProceedTukar').disabled = false;
-        } else {
-            Swal.fire('Kurang', `Poin belum cukup (Min 500).`, 'error');
-        }
+        } else Swal.fire('Kurang', 'Belum cukup 500', 'error');
     }
 
     function showRedeemOptions() {
         const name = document.getElementById('tukarNama').value;
         Swal.fire({
-            title: 'Metode Penukaran',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Pasti (Sistem)',
-            cancelButtonText: 'Gacha (Spinner)',
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d63384'
-        }).then((result) => {
-            if (result.isConfirmed) showFixedSystem(name);
-            else if (result.dismiss === Swal.DismissReason.cancel) showGachaSystem(name);
+            title: 'Pilih Cara Tukar', icon: 'question',
+            showCancelButton: true, confirmButtonText: 'Sistem (Pasti)', cancelButtonText: 'Gacha (Spinner)',
+            confirmButtonColor: '#3085d6', cancelButtonColor: '#d63384'
+        }).then((res) => {
+            if (res.isConfirmed) showFixedSystem(name);
+            else if (res.dismiss === Swal.DismissReason.cancel) showGachaSystem(name);
         });
     }
 
     function showFixedSystem(name) {
-        // (Sama seperti sebelumnya, disingkat agar muat)
-        Swal.fire({
-            title: 'Pilih Nominal',
-            showDenyButton: true,
-            confirmButtonText: '2.000',
-            denyButtonText: '5.000',
-        }).then((res) => {
-            if (res.isConfirmed) showTiers(name, 2000);
-            else if (res.isDenied) showTiers(name, 5000);
+        Swal.fire({ title: 'Nominal?', showDenyButton: true, confirmButtonText: '2.000', denyButtonText: '5.000' })
+        .then((res) => {
+            if(res.isConfirmed) showTiers(name, 2000);
+            else if(res.isDenied) showTiers(name, 5000);
         });
     }
 
     function showTiers(name, type) {
         const tiers = type === 2000 ? [500, 800, 1200, 1800, 2200] : [1500, 2400, 3500, 4800, 6000];
         const cur = calculatePoints(name);
-        let html = `<div class="list-group">`;
-        tiers.forEach((cost, i) => {
-            const disabled = cur < cost ? 'disabled' : '';
-            const cls = cur >= cost ? 'list-group-item-success' : 'list-group-item-light text-muted';
-            html += `<button class="list-group-item list-group-item-action ${cls}" ${disabled} onclick="processRedeem('${name}', ${cost}, 'Uang ${type}', false)">Tahap ${i+1} : ${cost} Poin</button>`;
+        let html = '<div class="list-group">';
+        tiers.forEach((c, i) => {
+            const dis = cur < c ? 'disabled' : '';
+            const cls = cur >= c ? 'list-group-item-success' : 'list-group-item-light text-muted';
+            html += `<button class="list-group-item list-group-item-action ${cls}" ${dis} onclick="processRedeem('${name}',${c},'Uang ${type}',false)">Tahap ${i+1}: ${c}</button>`;
         });
         html += '</div>';
         Swal.fire({ title: `Tukar ${type}`, html: html, showConfirmButton: false });
     }
 
-    // === SISTEM GACHA DENGAN SPINNER CHART.JS ===
+    // GACHA Logic
     let wheelChart = null;
-
     function getGachaCostCalc(count) {
-        if (count === 0) return 500;
-        let cost = 500;
+        if(count===0) return 500;
+        let c = 500;
         for(let i=1; i<=count; i++) {
-            let r = i % 4;
-            if(r===1) cost+=200; else if(r===2) cost+=300; else if(r===3) cost+=400; else cost+=500;
+            let r = i%4;
+            if(r===1) c+=200; else if(r===2) c+=300; else if(r===3) c+=400; else c+=500;
         }
-        return cost;
+        return c;
     }
 
     function showGachaSystem(name) {
         const count = getGachaCount(name);
         const cost = getGachaCostCalc(count);
         const cur = calculatePoints(name);
-
         Swal.fire({
-            title: '🎲 GACHA SPINNER',
-            html: `<p>Biaya: <b>${cost} Poin</b> | Poinmu: ${cur}</p><p class="text-danger small">Peringatan: Resiko tinggi zonk!</p>`,
-            showCancelButton: true,
-            confirmButtonText: `GAS (-${cost})`,
-            confirmButtonColor: '#d63384'
+            title: 'SPINNER GACHA', html: `Biaya: <b>${cost}</b> | Poinmu: ${cur}`,
+            showCancelButton: true, confirmButtonText: `PUTAR (-${cost})`, confirmButtonColor: '#d63384'
         }).then((res) => {
             if(res.isConfirmed) {
-                if (cur < cost) Swal.fire('Gagal', 'Poin kurang!', 'error');
+                if(cur < cost) Swal.fire('Gagal', 'Poin kurang', 'error');
                 else openSpinnerModal(name, cost);
             }
         });
@@ -624,93 +653,47 @@
 
     function openSpinnerModal(name, cost) {
         Swal.fire({
-            title: 'Semoga Beruntung!',
-            html: document.getElementById('spinnerTemplate').innerHTML,
-            showConfirmButton: false, // Jangan ada tombol dulu
-            allowOutsideClick: false,
-            didOpen: () => {
-                initWheel(name, cost);
-            }
+            title: 'Good Luck!', html: document.getElementById('spinnerTemplate').innerHTML,
+            showConfirmButton: false, allowOutsideClick: false,
+            didOpen: () => initWheel(name, cost)
         });
     }
 
     function initWheel(name, cost) {
         const ctx = document.querySelector('.swal2-popup #wheelCanvas').getContext('2d');
-        
-        // Visual Slices (Hanya visual, logic tetap matematika)
-        // Kita buat slice biar kelihatan ramai
         const labels = ["500", "ZONK", "1.000", "Mainan", "2.000", "ZONK", "5.000", "Mainan", "10k", "ZONK"];
         const colors = ["#FFD700", "#808080", "#ADFF2F", "#FFA500", "#00FFFF", "#808080", "#FF00FF", "#FFA500", "#FF4500", "#808080"];
 
         wheelChart = new Chart(ctx, {
             type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Ukuran slice sama
-                    backgroundColor: colors,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: false,
-                plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                animation: { duration: 0 }
-            }
+            data: { labels: labels, datasets: [{ data: [1,1,1,1,1,1,1,1,1,1], backgroundColor: colors, borderWidth: 0 }] },
+            options: { responsive: false, plugins: { legend: false, tooltip: false }, animation: { duration: 0 } }
         });
-
         spinWheelLogic(name, cost);
     }
 
     function spinWheelLogic(name, cost) {
-        // 1. Tentukan Pemenang dulu pake Math.random
         const rand = Math.random() * 100;
         let reward = "Uang Mainan (ZONK)";
-        let stopIndex = 3; // Index default visual (Mainan)
+        if (rand < 0.001) reward = "Uang 10.000";
+        else if (rand < 0.501) reward = "Uang 5.000";
+        else if (rand < 2.501) reward = "Uang 2.000";
+        else if (rand < 22.501) reward = "Uang 1.000";
+        else if (rand < 62.501) reward = "Uang 500";
 
-        if (rand < 0.001) { reward = "Uang 10.000"; stopIndex = 8; } // Index 8 di array labels
-        else if (rand < 0.501) { reward = "Uang 5.000"; stopIndex = 6; }
-        else if (rand < 2.501) { reward = "Uang 2.000"; stopIndex = 4; }
-        else if (rand < 22.501) { reward = "Uang 1.000"; stopIndex = 2; }
-        else if (rand < 62.501) { reward = "Uang 500"; stopIndex = 0; }
-        else { 
-            // ZONK / MAINAN (Random visual index yg isinya zonk)
-            const zonks = [1, 3, 5, 7, 9];
-            stopIndex = zonks[Math.floor(Math.random() * zonks.length)];
-        }
-
-        // 2. Animasi Putar
-        let currentRotation = 0;
-        // Putar minimal 5 kali (360 * 5) + derajat menuju target
-        // Chart JS Pie mulai dari jam 3 (0 derajat) ke kanan.
-        // Kita harus hitung derajat target. Ada 10 slice, 1 slice = 36 deg.
-        // Agar panah atas menunjuk target, target harus di posisi jam 12 (270 deg atau -90 deg).
-        
-        const sliceAngle = 36; 
-        // Logic animasi kasar:
-        let spins = 50; // jumlah frame animasi cepat
-        let speed = 20; 
-        let count = 0;
-        
+        let speed = 25, count = 0;
         const anim = setInterval(() => {
             wheelChart.options.rotation += speed;
             wheelChart.update();
             count++;
-            
-            if (count > 100) { // Mulai melambat
-                speed *= 0.98; 
-            }
-
-            if (speed < 0.5) {
+            if(count > 80) speed *= 0.98;
+            if(speed < 0.5) {
                 clearInterval(anim);
-                // Final Result
                 setTimeout(() => {
-                    Swal.fire({
-                        title: reward.includes("ZONK") || reward.includes("Mainan") ? 'YAHHH...' : 'SELAMAT!',
-                        text: `Kamu dapat ${reward}`,
-                        icon: reward.includes("ZONK") ? 'error' : 'success'
-                    }).then(() => {
-                         processRedeem(name, cost, reward, true);
+                    processRedeem(name, cost, reward, true);
+                    Swal.fire({ 
+                        title: reward.includes('ZONK') ? 'YAHHH...' : 'SELAMAT!',
+                        text: `Dapat ${reward}`, icon: reward.includes('ZONK') ? 'error' : 'success'
                     });
                 }, 500);
             }
@@ -718,24 +701,15 @@
     }
 
     function processRedeem(name, cost, reward, isGacha) {
-        const data = { id: Date.now(), name, cost, reward, date: new Date().toLocaleString() };
-        let redeems = getRedeems();
-        redeems.push(data);
-        saveRedeems(redeems);
-
+        const list = getRedeems();
+        list.push({ id: Date.now(), name, cost, reward, date: new Date().toLocaleString() });
+        saveRedeems(list);
         if(isGacha) incGachaCount(name);
-        
-        if(!isGacha) { // Jika bukan gacha, alert manual, kalo gacha udah alert di spinner
-            let icon = (reward.includes('Mainan') || reward.includes('ZONK')) ? 'error' : 'success';
-            Swal.fire('Berhasil', `Dapat ${reward}`, icon);
-        }
+        if(!isGacha) Swal.fire('Sukses', `Tukar ${reward}`, 'success');
         
         loadEligibleStudents();
         renderRedeemHistory();
-        // Refresh total di history jika terbuka
-        if(!document.getElementById('view-history').classList.contains('d-none-custom')){
-             renderHistoryDetail(currentPage);
-        }
+        if(!document.getElementById('view-history').classList.contains('d-none-custom')) renderHistoryDetail(currentPage);
     }
 
     function renderRedeemHistory() {
@@ -744,33 +718,30 @@
         tbody.innerHTML = "";
         list.forEach(r => {
             tbody.innerHTML += `<tr>
-                <td>${r.name}</td>
-                <td class="fw-bold text-primary">${r.reward}</td>
+                <td>${r.name}</td><td class="fw-bold text-primary">${r.reward}</td>
                 <td class="text-danger">-${r.cost}</td>
                 <td><button class="btn btn-sm text-danger" onclick="deleteRedeem(${r.id})">❌</button></td>
             </tr>`;
         });
     }
-    
+
+    function deleteRedeem(id) {
+        Swal.fire({ title: 'Batal?', text: "Poin akan dikembalikan.", showCancelButton: true, confirmButtonText: 'Ya' })
+        .then((r) => {
+            if(r.isConfirmed) {
+                saveRedeems(getRedeems().filter(x => x.id !== id));
+                renderRedeemHistory();
+                Swal.fire('Dibatalkan', '', 'success');
+            }
+        });
+    }
+
     function renderInfoTables() {
         const tPel = document.getElementById('infoPelanggaran');
         const tAkt = document.getElementById('infoAktifitas');
         violations.forEach(v => tPel.innerHTML += `<tr><td>${v.name}</td><td class="text-danger">${v.point}</td></tr>`);
         activities.forEach(a => tAkt.innerHTML += `<tr><td>${a.name}</td><td class="text-success">+${a.point}</td></tr>`);
     }
-
 </script>
-
-<script>
-    // PWA Service Worker Register
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW sukses: ', reg.scope))
-          .catch(err => console.log('SW gagal: ', err));
-      });
-    }
-</script>
-
 </body>
 </html>
