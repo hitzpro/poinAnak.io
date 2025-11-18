@@ -1,11 +1,11 @@
 {
-    "name": "Sistem Poin Santri",
-    "short_name": "PoinSantri",
+    "name": "Sistem Poin Pengajian Anak",
+    "short_name": "PoinAnak",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#f0f2f5",
     "theme_color": "#0d6efd",
-    "description": "Aplikasi pencatat poin aktifitas dan pelanggaran santri",
+    "description": "Aplikasi pencatat poin aktifitas dan pelanggaran anak",
     "icons": [
       {
         "src": "./icon.png",
