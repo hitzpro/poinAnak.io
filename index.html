@@ -17,13 +17,14 @@
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f0f2f5;
-            padding-bottom: 50px;
+            padding-bottom: 80px; /* Tambah padding bawah biar konten gak ketutup tombol HP */
         }
         .card {
             border: none;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            overflow: hidden; /* Card yang hidden, bukan tabelnya */
         }
         h1, h2, h3, h4 {
             font-weight: 600;
@@ -33,21 +34,39 @@
             border-radius: 10px;
             padding: 10px 20px;
         }
+        
+        /* --- PERBAIKAN TABLE RESPONSIVE --- */
         .table-responsive {
-            border-radius: 10px;
-            overflow: hidden;
-            background: white;
+            display: block;
+            width: 100%;
+            overflow-x: auto; /* Wajib auto biar bisa scroll */
+            -webkit-overflow-scrolling: touch; /* Biar smooth di iPhone */
+            border-radius: 0; /* Reset radius di wrapper tabel */
         }
+
+        /* Trik biar tabel maksa scroll ke samping di HP */
+        .table th, .table td {
+            white-space: nowrap; /* Teks gak bakal turun baris */
+            vertical-align: middle;
+        }
+        
+        /* Sedikit styling biar tabel gak nempel banget */
+        .table {
+            margin-bottom: 0;
+        }
+        /* ---------------------------------- */
+
         .d-none-custom {
             display: none !important;
         }
-        /* Styling untuk Paginasi */
+        
         .pagination-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-top: 15px;
         }
+
         /* Styling Spinner Gacha */
         #canvasContainer {
             position: relative;
@@ -64,7 +83,7 @@
             height: 0; 
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
-            border-top: 30px solid #dc3545; /* Merah */
+            border-top: 30px solid #dc3545;
             z-index: 10;
         }
     </style>
